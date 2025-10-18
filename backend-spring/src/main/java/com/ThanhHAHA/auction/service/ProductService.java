@@ -1,5 +1,6 @@
 package com.ThanhHAHA.auction.service;
 
+import com.ThanhHAHA.auction.dto.AuctionSessionDTO;
 import com.ThanhHAHA.auction.dto.ProductDTO;
 import com.ThanhHAHA.auction.entity.Product;
 import com.ThanhHAHA.auction.entity.User;
@@ -15,6 +16,9 @@ public class ProductService {
 
     @Autowired
     private ProductRepository productRepository;
+    
+    @Autowired
+    private AuctionSessionService auctionSessionService;
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
@@ -62,7 +66,13 @@ public class ProductService {
         dto.setDescription(product.getDescription());
         dto.setPrice(product.getPrice());
         dto.setOwnerUsername(product.getOwner().getUsername());
+
+        // Lấy session ACTIVE của product
+        AuctionSessionDTO activeSession = auctionSessionService.getActiveSessionByProductId(product.getId())
+                .orElse(null);
+        dto.setActiveSession(activeSession);
+
         return dto;
     }
-}
 
+}

@@ -7,6 +7,12 @@ export async function getProducts() {
   return res.json();
 }
 
+export async function getProductById(id) {
+  const res = await fetch(`${BASE_URL}/products/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch product");
+  return res.json();
+}
+
 // Lấy lịch sử đấu giá full
 export async function getAuctionHistory(sessionId) {
   const res = await fetch(`${BASE_URL}/auction/full-history/${sessionId}`);

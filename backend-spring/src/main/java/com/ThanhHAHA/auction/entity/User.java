@@ -1,5 +1,7 @@
 package com.ThanhHAHA.auction.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +23,7 @@ public class User {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id") // khóa ngoại trỏ tới Role
+    @JsonBackReference
     private Role role;
 
     @Override
