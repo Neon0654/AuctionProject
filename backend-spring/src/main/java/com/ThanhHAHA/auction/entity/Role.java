@@ -7,6 +7,8 @@ import lombok.Setter;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 @Entity
 @Table(name = "Roles")
 @Getter
@@ -21,6 +23,7 @@ public class Role {
     private String name;
 
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private Set<User> users = new HashSet<>();
 
     @Override

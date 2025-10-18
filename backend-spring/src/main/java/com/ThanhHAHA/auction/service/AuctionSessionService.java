@@ -5,9 +5,12 @@ import com.ThanhHAHA.auction.entity.AuctionSession;
 import com.ThanhHAHA.auction.entity.Product;
 import com.ThanhHAHA.auction.repository.AuctionSessionRepository;
 import com.ThanhHAHA.auction.repository.ProductRepository;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -15,10 +18,14 @@ public class AuctionSessionService {
 
     private final AuctionSessionRepository sessionRepo;
     private final ProductRepository productRepo;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public AuctionSessionService(AuctionSessionRepository sessionRepo, ProductRepository productRepo) {
+    public AuctionSessionService(AuctionSessionRepository sessionRepo,
+            ProductRepository productRepo,
+            SimpMessagingTemplate messagingTemplate) {
         this.sessionRepo = sessionRepo;
         this.productRepo = productRepo;
+        this.messagingTemplate = messagingTemplate;
     }
 
     // Tạo session mới
@@ -51,6 +58,14 @@ public class AuctionSessionService {
         session.setCurrentPrice(bidAmount);
         session.setHighestBidder(bidder);
         AuctionSession saved = sessionRepo.save(session);
+
+        // trigger WebSocket
+        messagingTemplate.convertAndSend(
+                "/topic/auction/" + sessionId,
+                Map.of(
+                        "currentPrice", bidAmount,
+                        "highestBidder", bidder));
+
         return mapToDTO(saved);
     }
 
@@ -82,6 +97,11 @@ public class AuctionSessionService {
         } else {
             throw new Exception("AuctionSession not found with id: " + sessionId);
         }
+    }
+
+    public Optional<AuctionSessionDTO> getActiveSessionByProductId(Long productId) {
+        return sessionRepo.findByProductIdAndStatus(productId, AuctionSession.Status.ACTIVE)
+                .map(this::mapToDTO);
     }
 
 }

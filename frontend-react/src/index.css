@@ -1,1 +1,70 @@
-  
+/* index.css */
+
+/* Reset cơ bản */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+  background-color: #f1f5f9; /* nền tổng thể */
+}
+
+/* Wrapper bao toàn bộ app */
+#root, .app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* chiếm toàn bộ chiều cao màn hình */
+}
+
+/* Header */
+header {
+  background: linear-gradient(to right, #1e40af, #2563eb);
+  color: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* Main layout */
+.main-layout {
+  display: grid;
+  grid-template-columns: 250px 1fr 250px;
+  gap: 2rem;
+  padding: 1.5rem;
+  flex: 1; /* chiếm phần còn lại, đẩy footer xuống */
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+}
+
+/* Main content */
+.main-content {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+}
+
+/* Footer */
+footer {
+  background-color: #1f2937;
+  color: #e5e7eb;
+  text-align: center;
+  padding: 1.5rem 0;
+  margin-top: auto; /* luôn dính dưới */
+  box-shadow: inset 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Responsive: 1 cột trên tablet/mobile */
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+}
