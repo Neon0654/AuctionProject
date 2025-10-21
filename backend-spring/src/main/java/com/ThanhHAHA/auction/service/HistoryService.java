@@ -1,11 +1,13 @@
 package com.ThanhHAHA.auction.service;
 
 import com.ThanhHAHA.auction.entity.History;
+import com.ThanhHAHA.auction.entity.User;
 import com.ThanhHAHA.auction.entity.AuctionSession;
 import com.ThanhHAHA.auction.repository.HistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -20,16 +22,15 @@ public class HistoryService {
     }
 
     // Thêm history mới
-    public History addHistory(AuctionSession session, String actionType, Long userId) {
+    // Trong HistoryService
+    public History addHistory(AuctionSession session, String actionType, User user, Double bidAmount) {
         History h = new History();
         h.setAuctionSession(session);
         h.setActionType(actionType);
-
-        // Chỉ demo: cần userService để lấy User object
-        // User user = userService.getUserById(userId);
-        // h.setUser(user);
-
-        h.setTimestamp(java.time.LocalDateTime.now());
+        h.setUser(user); // lưu object User
+        h.setBidAmount(bidAmount);
+        h.setTimestamp(LocalDateTime.now());
         return historyRepository.save(h);
     }
+
 }

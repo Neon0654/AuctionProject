@@ -2,6 +2,8 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
 const WS_BASE_URL = 'http://localhost:8080';
+// const WS_BASE_URL = 'https://nontheistically-subcutaneous-albertina.ngrok-free.dev';
+
 
 export interface BidMessage {
   auctionId: number;
