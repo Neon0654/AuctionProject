@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -20,9 +21,11 @@ public class ProductService {
     @Autowired
     private AuctionSessionService auctionSessionService;
 
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
-    }
+public List<ProductDTO> getAllProductsDTO() {
+    return productRepository.findAll().stream()
+            .map(this::toDTO)
+            .collect(Collectors.toList());
+}
 
     public Optional<Product> getProductById(Long id) {
         return productRepository.findById(id);
@@ -66,6 +69,7 @@ public class ProductService {
         dto.setDescription(product.getDescription());
         dto.setPrice(product.getPrice());
         dto.setOwnerUsername(product.getOwner().getUsername());
+        dto.setImageUrl(product.getImageUrl());
 
         // Lấy session ACTIVE của product
         AuctionSessionDTO activeSession = auctionSessionService.getActiveSessionByProductId(product.getId())

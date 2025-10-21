@@ -1,17 +1,21 @@
 package com.ThanhHAHA.auction.service;
 
 import com.ThanhHAHA.auction.dto.AuctionSessionDTO;
+import com.ThanhHAHA.auction.dto.BidDTO;
 import com.ThanhHAHA.auction.entity.AuctionSession;
 import com.ThanhHAHA.auction.entity.Product;
 import com.ThanhHAHA.auction.repository.AuctionSessionRepository;
+import com.ThanhHAHA.auction.repository.BidRepository;
 import com.ThanhHAHA.auction.repository.ProductRepository;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AuctionSessionService {
@@ -19,13 +23,16 @@ public class AuctionSessionService {
     private final AuctionSessionRepository sessionRepo;
     private final ProductRepository productRepo;
     private final SimpMessagingTemplate messagingTemplate;
+    private final BidRepository bidRepo;
 
     public AuctionSessionService(AuctionSessionRepository sessionRepo,
             ProductRepository productRepo,
-            SimpMessagingTemplate messagingTemplate) {
+            SimpMessagingTemplate messagingTemplate,
+            BidRepository bidRepo) { // nhận repository
         this.sessionRepo = sessionRepo;
         this.productRepo = productRepo;
         this.messagingTemplate = messagingTemplate;
+        this.bidRepo = bidRepo;
     }
 
     // Tạo session mới
@@ -85,9 +92,11 @@ public class AuctionSessionService {
                 session.getId(),
                 session.getProduct().getId(),
                 session.getProduct().getName(),
+                session.getProduct().getPrice(), // ← đây là giá khởi điểm
                 session.getCurrentPrice(),
                 session.getHighestBidder(),
-                session.getStatus().name());
+                session.getStatus().name(),
+                session.getEndTime());
     }
 
     public AuctionSession getSessionById(Long sessionId) throws Exception {
@@ -104,4 +113,16 @@ public class AuctionSessionService {
                 .map(this::mapToDTO);
     }
 
+    public List<BidDTO> getBidsBySessionId(Long sessionId) throws Exception {
+        return bidRepo.findByAuctionSessionIdOrderByTimestampDesc(sessionId)
+                .stream()
+                .map(bid -> new BidDTO(
+                        bid.getId(),
+                        bid.getAuctionSession().getId(),
+                        bid.getUser().getId(),
+                        bid.getUser().getUsername(),
+                        bid.getAmount(),
+                        bid.getTimestamp()))
+                .collect(Collectors.toList());
+    }
 }
