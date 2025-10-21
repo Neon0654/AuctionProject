@@ -12,6 +12,7 @@ public class ProductDTO {
     private double price;
     private String ownerUsername;
     private AuctionSessionDTO activeSession;
+    private String imageUrl;
 }
 
 

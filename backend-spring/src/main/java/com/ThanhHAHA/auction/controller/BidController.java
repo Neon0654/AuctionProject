@@ -17,6 +17,11 @@ public class BidController {
         this.bidService = bidService;
     }
 
+    @GetMapping("/{id}/bids")
+    public List<BidDTO> getBids(@PathVariable Long id) throws Exception {
+        return bidService.getBidsBySession(id);
+    }
+
     @PostMapping("/place")
     public BidDTO placeBid(@RequestParam Long sessionId,
             @RequestParam Long userId,
