@@ -29,4 +29,6 @@ public class History {
     private User user;
 
     private LocalDateTime timestamp;
+
+    private Double bidAmount;
 }

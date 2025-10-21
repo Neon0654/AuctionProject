@@ -115,7 +115,7 @@ const AuctionDetail = () => {
     try {
       const bidFromApi = await apiService.placeBidInAuction(
         auction.id.toString(),
-        user.id.toString(),
+        user.username, // ✅ gửi username thay vì id
         amount
       );
 
