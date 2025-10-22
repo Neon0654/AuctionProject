@@ -80,22 +80,31 @@ public class AuctionSessionService {
         session.setCurrentPrice(bidAmount);
         session.setHighestBidder(bidder);
         AuctionSession saved = sessionRepo.save(session);
-        
+
         Bid bid = new Bid();
         bid.setAuctionSession(session);
         bid.setUser(user);
         bid.setAmount(bidAmount);
         bid.setTimestamp(LocalDateTime.now());
         bidRepo.save(bid);
-        
+
         historyService.addHistory(session, "BID_PLACED", user, bidAmount);
 
         // trigger WebSocket
+        BidDTO bidDto = new BidDTO(
+                bid.getId(),
+                session.getId(),
+                user.getId(),
+                user.getUsername(),
+                bid.getAmount(),
+                bid.getTimestamp());
+
+        System.out.println("📢 Broadcasting to /topic/auction/" + sessionId);
+        System.out.println("Payload: " + bidDto);
+        
         messagingTemplate.convertAndSend(
                 "/topic/auction/" + sessionId,
-                Map.of(
-                        "currentPrice", bidAmount,
-                        "highestBidder", bidder));
+                bidDto);
 
         return mapToDTO(saved);
     }

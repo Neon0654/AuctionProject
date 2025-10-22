@@ -1,15 +1,7 @@
-import { Client } from '@stomp/stompjs';
+import { Client, IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
 const WS_BASE_URL = 'http://localhost:8080';
-// const WS_BASE_URL = 'https://nontheistically-subcutaneous-albertina.ngrok-free.dev';
-
-
-export interface BidMessage {
-  auctionId: number;
-  userId: number;
-  amount: number;
-}
 
 export interface BidUpdate {
   id: number;
@@ -23,24 +15,35 @@ export interface BidUpdate {
 export class WebSocketService {
   private client: Client | null = null;
   private subscriptions: Map<number, any> = new Map();
+  private connected = false;
+  private pendingSubscriptions: (() => void)[] = [];
 
-  connect(): Promise<void> {
+  async connect(): Promise<void> {
+    if (this.connected && this.client) return;
+
     return new Promise((resolve, reject) => {
       this.client = new Client({
-        // use SockJS endpoint for Spring SockJS fallback: /ws/auction
+        // ✅ phải khớp endpoint bên Spring: registry.addEndpoint("/ws").withSockJS()
         webSocketFactory: () => new SockJS(`${WS_BASE_URL}/ws/auction`),
-        debug: (str) => {
-          console.log('STOMP Debug:', str);
-        },
+
         reconnectDelay: 5000,
         heartbeatIncoming: 4000,
         heartbeatOutgoing: 4000,
+
+        debug: (str) => console.log('STOMP:', str),
+
         onConnect: () => {
-          console.log('WebSocket connected');
+          console.log('✅ WebSocket connected');
+          this.connected = true;
           resolve();
+
+          // chạy tất cả subscription còn pending
+          this.pendingSubscriptions.forEach((fn) => fn());
+          this.pendingSubscriptions = [];
         },
+
         onStompError: (frame) => {
-          console.error('STOMP error:', frame);
+          console.error('❌ STOMP error:', frame);
           reject(new Error('WebSocket connection failed'));
         },
       });
@@ -50,59 +53,58 @@ export class WebSocketService {
   }
 
   subscribeToAuction(auctionId: number, callback: (bid: BidUpdate) => void): void {
-    if (!this.client || !this.client.connected) {
-      console.error('WebSocket not connected');
-      return;
-    }
-
-    if (this.subscriptions.has(auctionId)) {
-      console.log('Already subscribed to auction', auctionId);
-      return;
-    }
-
-    const subscription = this.client.subscribe(
-      `/topic/auction/${auctionId}`,
-      (message) => {
-        const bid: BidUpdate = JSON.parse(message.body);
-        console.log('Received bid update:', bid);
-        callback(bid);
+    const doSubscribe = () => {
+      if (!this.client || !this.client.connected) {
+        console.warn('⚠️ Cannot subscribe — client not connected yet');
+        return;
       }
-    );
 
-    this.subscriptions.set(auctionId, subscription);
-    console.log('Subscribed to auction:', auctionId);
+      // tránh double subscribe
+      if (this.subscriptions.has(auctionId)) {
+        console.log('Already subscribed to auction', auctionId);
+        return;
+      }
+
+      const sub = this.client.subscribe(`/topic/auction/${auctionId}`, (message: IMessage) => {
+        try {
+          const bid: BidUpdate = JSON.parse(message.body);
+          console.log('📩 Received bid update:', bid);
+          callback(bid);
+        } catch (err) {
+          console.error('❌ Failed to parse WS message:', err);
+        }
+      });
+
+      this.subscriptions.set(auctionId, sub);
+      console.log('✅ Subscribed to auction:', auctionId);
+    };
+
+    if (!this.connected) {
+      console.log('⏳ WebSocket not connected yet, queueing subscription...');
+      this.pendingSubscriptions.push(doSubscribe);
+    } else {
+      doSubscribe();
+    }
   }
 
   unsubscribeFromAuction(auctionId: number): void {
-    const subscription = this.subscriptions.get(auctionId);
-    if (subscription) {
-      subscription.unsubscribe();
+    const sub = this.subscriptions.get(auctionId);
+    if (sub) {
+      sub.unsubscribe();
       this.subscriptions.delete(auctionId);
-      console.log('Unsubscribed from auction:', auctionId);
+      console.log('❌ Unsubscribed from auction:', auctionId);
     }
   }
 
-  placeBid(bidMessage: BidMessage): void {
-    if (!this.client || !this.client.connected) {
-      console.error('WebSocket not connected');
-      throw new Error('WebSocket not connected');
-    }
-
-    this.client.publish({
-      destination: '/app/bid',
-      body: JSON.stringify(bidMessage),
-    });
-    console.log('Bid placed:', bidMessage);
-  }
-
-  // Disconnect and clean up subscriptions
   disconnect(): void {
     if (this.client) {
       this.subscriptions.forEach((sub) => sub.unsubscribe());
       this.subscriptions.clear();
       this.client.deactivate();
       this.client = null;
-      console.log('WebSocket disconnected');
+      this.connected = false;
+      this.pendingSubscriptions = [];
+      console.log('🔌 WebSocket disconnected');
     }
   }
 }
