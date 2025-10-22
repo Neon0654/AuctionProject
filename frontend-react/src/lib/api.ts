@@ -11,6 +11,7 @@ export interface Product {
 }
 
 export interface Bid {
+  bidTime: any;
   id: number;
   sessionId: number;
   userId: number;

@@ -31,5 +31,10 @@ public class Bid {
     private Double amount;
 
     private LocalDateTime timestamp;
+
+    public LocalDateTime getBidTime() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getBidTime'");
+    }
 }
 

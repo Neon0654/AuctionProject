@@ -8,6 +8,7 @@ import com.ThanhHAHA.auction.repository.AuctionSessionRepository;
 import com.ThanhHAHA.auction.repository.BidRepository;
 import com.ThanhHAHA.auction.repository.UserRepository;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,11 +21,16 @@ public class BidService {
     private final BidRepository bidRepo;
     private final AuctionSessionRepository sessionRepo;
     private final UserRepository userRepo;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public BidService(BidRepository bidRepo, AuctionSessionRepository sessionRepo, UserRepository userRepo) {
+    public BidService(BidRepository bidRepo,
+            AuctionSessionRepository sessionRepo,
+            UserRepository userRepo,
+            SimpMessagingTemplate messagingTemplate) {
         this.bidRepo = bidRepo;
         this.sessionRepo = sessionRepo;
         this.userRepo = userRepo;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public BidDTO placeBid(Long sessionId, Long userId, Double amount) throws Exception {
@@ -54,7 +60,15 @@ public class BidService {
         session.setHighestBidder(user.getUsername());
         sessionRepo.save(session);
 
-        return mapToDTO(savedBid);
+        // Gửi realtime WebSocket cho tất cả client đang theo dõi phiên
+        BidDTO bidDto = mapToDTO(savedBid);
+        messagingTemplate.convertAndSend("/topic/auction/" + sessionId, bidDto);
+
+                System.out.println("📢 Broadcasting to /topic/auction/" + sessionId);
+        messagingTemplate.convertAndSend("/topic/auction/" + sessionId, bidDto);
+        
+        return bidDto;
+
     }
 
     private BidDTO mapToDTO(Bid bid) {
