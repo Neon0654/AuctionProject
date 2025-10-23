@@ -58,7 +58,7 @@ const CreateAuction = () => {
         description: 'Đấu giá của bạn đã được đăng',
       });
 
-      navigate('/dashboard');
+      navigate('/');
     } catch (error: any) {
       console.error('Failed to create auction:', error);
       toast({

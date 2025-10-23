@@ -26,6 +26,9 @@ public class User {
     @JsonBackReference
     private Role role;
 
+    @Column(unique = true, nullable = false)
+    private String email;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
