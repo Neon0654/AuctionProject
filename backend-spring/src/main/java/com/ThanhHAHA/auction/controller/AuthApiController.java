@@ -42,6 +42,7 @@ public class AuthApiController {
 
         User user = new User();
         user.setUsername(body.get("username"));
+        user.setEmail(body.get("email"));
         user.setPassword(passwordEncoder.encode(body.get("password")));
 
         // Gán role mặc định
